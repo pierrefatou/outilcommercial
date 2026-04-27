@@ -945,8 +945,28 @@ function importData(e){
   reader.readAsText(file);e.target.value='';
 }
 
-renderHome();
-initSupaStatus();
+// Auto-load from Supabase on startup
+async function initApp() {
+  renderHome();
+  initSupaStatus();
+  try {
+    const rows = await supaFetch('GET', 'budget_data?id=eq.main&select=*');
+    if (rows && rows.length) {
+      const data = rows[0];
+      if (data.transactions) state.transactions = data.transactions;
+      if (data.savings) state.savings = data.savings;
+      if (data.categories && data.categories.length) state.categories = data.categories;
+      localStorage.setItem('budget_tx', JSON.stringify(state.transactions));
+      localStorage.setItem('budget_cats', JSON.stringify(state.categories));
+      localStorage.setItem('budget_sav', JSON.stringify(state.savings));
+      renderHome();
+    }
+  } catch(e) {
+    console.warn('Chargement Supabase échoué, utilisation localStorage:', e.message);
+  }
+}
+
+initApp();
 </script>
 </body>
 </html>
